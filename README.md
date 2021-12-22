@@ -60,7 +60,7 @@ k3d cluster create local-k8s --servers 1 --agents 1 --registry-create \
   
  sudo apt install jq -y
 
-# determine loadbalancer ingress range
+#### determine loadbalancer ingress range
 cidr_block=$(docker network inspect k3d-local-k8s | jq '.[0].IPAM.Config[0].Subnet' | tr -d '"')
 cidr_base_addr=${cidr_block%???}
 ingress_first_addr=$(echo $cidr_base_addr | awk -F'.' '{print $1,$2,255,0}' OFS='.')
@@ -69,11 +69,11 @@ ingress_range=$ingress_first_addr-$ingress_last_addr
 
 echo $ingress_range
 
-# deploy metallb 
+#### deploy metallb 
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.10.2/manifests/namespace.yaml
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.10.2/manifests/metallb.yaml
 
-# configure metallb ingress address range
+çconfigure metallb ingress address range
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ConfigMap
@@ -89,16 +89,98 @@ data:
       - $ingress_range
 EOF
 
-# create a deployment (i.e. nginx)
+sudo apt install jq -y
+
+#### determine loadbalancer ingress range
+cidr_block=$(docker network inspect k3d-local-k8s | jq '.[0].IPAM.Config[0].Subnet' | tr -d '"')
+cidr_base_addr=${cidr_block%???}
+ingress_first_addr=$(echo $cidr_base_addr | awk -F'.' '{print $1,$2,255,0}' OFS='.')
+ingress_last_addr=$(echo $cidr_base_addr | awk -F'.' '{print $1,$2,255,255}' OFS='.')
+ingress_range=$ingress_first_addr-$ingress_last_addr
+
+echo $ingress_range
+
+#### deploy metallb 
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.10.2/manifests/namespace.yaml
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.10.2/manifests/metallb.yaml
+
+#### configure metallb ingress address range
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: metallb-system
+  name: config
+data:
+  config: |
+    address-pools:
+    - name: default
+      protocol: layer2
+      addresses:
+      - $ingress_range
+EOF
+
+#### create a deployment (i.e. nginx)
 kubectl create deployment nginx --image=nginx
 
-# expose the deployments using a LoadBalancer
+#### expose the deployments using a LoadBalancer
 kubectl expose deployment nginx --port=80 --type=LoadBalancer
 
-# obtain the ingress external ip
+#### obtain the ingress external ip
 external_ip=$(kubectl get svc nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-# test the loadbalancer external ip
+#### test the loadbalancer external ip
+curl $external_ipcreate a deployment (i.e. nginx)
+kubectl create deployment nginx --image=nginx
+
+#### expose the deployments using a LoadBalancer
+kubectl expose deployment nginx --port=80 --type=LoadBalancer
+
+#### obtain the ingress external ip
+external_ip=$(kubectl get svc nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+sudo apt install jq -y
+
+#### determine loadbalancer ingress range
+cidr_block=$(docker network inspect k3d-local-k8s | jq '.[0].IPAM.Config[0].Subnet' | tr -d '"')
+cidr_base_addr=${cidr_block%???}
+ingress_first_addr=$(echo $cidr_base_addr | awk -F'.' '{print $1,$2,255,0}' OFS='.')
+ingress_last_addr=$(echo $cidr_base_addr | awk -F'.' '{print $1,$2,255,255}' OFS='.')
+ingress_range=$ingress_first_addr-$ingress_last_addr
+
+echo $ingress_range
+
+#### deploy metallb 
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.10.2/manifests/namespace.yaml
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.10.2/manifests/metallb.yaml
+
+#### configure metallb ingress address range
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: metallb-system
+  name: config
+data:
+  config: |
+    address-pools:
+    - name: default
+      protocol: layer2
+      addresses:
+      - $ingress_range
+EOF
+
+#### create a deployment (i.e. nginx)
+kubectl create deployment nginx --image=nginx
+
+#### expose the deployments using a LoadBalancer
+kubectl expose deployment nginx --port=80 --type=LoadBalancer
+
+#### obtain the ingress external ip
+external_ip=$(kubectl get svc nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+#### test the loadbalancer external ip
+curl $external_ip test the loadbalancer external ip
 curl $external_ip
 
 
